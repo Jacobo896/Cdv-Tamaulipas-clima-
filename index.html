@@ -105,6 +105,31 @@
       <h2>Radar Meteorológico</h2>
       <iframe src="https://embed.windy.com/embed2.html?lat=23.737&lon=-99.154&zoom=7&level=surface&overlay=radar&menu=true&message=true&marker=true&calendar=now&pressure=true&type=map&location=coordinates&detail=true&detailLat=23.737&detailLon=-99.154&metricWind=default&metricTemp=default&radarRange=-1" allowfullscreen></iframe>
     </section>
+
+    <!-- Nueva sección: Clima por meses -->
+    <section class="chart-section">
+      <h2>¿Qué tiempo suele hacer en Ciudad Victoria por meses?</h2>
+      <label for="monthSelect"><strong>Selecciona un mes:</strong></label>
+      <select id="monthSelect" style="padding:10px; margin-left:10px;">
+        <option value="enero">Enero</option>
+        <option value="febrero">Febrero</option>
+        <option value="marzo">Marzo</option>
+        <option value="abril">Abril</option>
+        <option value="mayo">Mayo</option>
+        <option value="junio">Junio</option>
+        <option value="julio">Julio</option>
+        <option value="agosto">Agosto</option>
+        <option value="septiembre">Septiembre</option>
+        <option value="octubre">Octubre</option>
+        <option value="noviembre">Noviembre</option>
+        <option value="diciembre">Diciembre</option>
+      </select>
+
+      <div id="monthlyTable" style="margin-top: 20px;"></div>
+
+      <canvas id="monthChart" style="margin-top: 30px;"></canvas>
+    </section>
+
   </main>
 
   <footer>
@@ -142,11 +167,17 @@
     }
 
     function displayWeather(data) {
+      const description = data.weather[0].description.toLowerCase();
+      const weatherEmojis = {
+        "clear sky": "☀️", "few clouds": "🌤️", "scattered clouds": "☁️", "broken clouds": "☁️",
+        "shower rain": "🌧️", "rain": "🌧️", "thunderstorm": "⚡", "snow": "❄️", "mist": "🌫️"
+      };
+      const emoji = weatherEmojis[description] || "🌈";
       document.getElementById('weather').innerHTML = `
         <h3>${data.name}, ${data.sys.country}</h3>
         <p><strong>Temperatura:</strong> ${data.main.temp} °C</p>
         <p><strong>Humedad:</strong> ${data.main.humidity}%</p>
-        <p><strong>Descripción:</strong> ${data.weather[0].description}</p>
+        <p><strong>Descripción:</strong> ${data.weather[0].description} ${emoji}</p>
       `;
     }
 
@@ -156,11 +187,17 @@
       const daily = data.list.filter(item => item.dt_txt.includes("12:00:00"));
       daily.slice(0, 5).forEach(day => {
         const date = new Date(day.dt * 1000);
+        const description = day.weather[0].description.toLowerCase();
+        const weatherEmojis = {
+          "clear sky": "☀️", "few clouds": "🌤️", "scattered clouds": "☁️", "broken clouds": "☁️",
+          "shower rain": "🌧️", "rain": "🌧️", "thunderstorm": "⚡", "snow": "❄️", "mist": "🌫️"
+        };
+        const emoji = weatherEmojis[description] || "🌈";
         container.innerHTML += `
           <div class="forecast-card">
             <h4>${date.toLocaleDateString('es-MX', { weekday: 'long' })}</h4>
             <p>${day.main.temp} °C</p>
-            <p>${day.weather[0].description}</p>
+            <p>${day.weather[0].description} ${emoji}</p>
           </div>
         `;
       });
@@ -210,6 +247,66 @@
         }
       });
     }
+
+    // --- Sección: Clima por Mes ---
+    const climaPorMes = {
+      enero: { tmin: 14, tmax: 25, lluvia: 20, diasLluvia: 3, viento: 15 },
+      febrero: { tmin: 15, tmax: 27, lluvia: 18, diasLluvia: 2, viento: 14 },
+      marzo: { tmin: 18, tmax: 30, lluvia: 15, diasLluvia: 2, viento: 16 },
+      abril: { tmin: 21, tmax: 33, lluvia: 25, diasLluvia: 3, viento: 17 },
+      mayo: { tmin: 24, tmax: 37, lluvia: 40, diasLluvia: 5, viento: 18 },
+      junio: { tmin: 25, tmax: 36, lluvia: 70, diasLluvia: 7, viento: 16 },
+      julio: { tmin: 25, tmax: 35, lluvia: 60, diasLluvia: 6, viento: 15 },
+      agosto: { tmin: 25, tmax: 35, lluvia: 55, diasLluvia: 5, viento: 14 },
+      septiembre: { tmin: 24, tmax: 33, lluvia: 60, diasLluvia: 6, viento: 13 },
+      octubre: { tmin: 22, tmax: 30, lluvia: 40, diasLluvia: 4, viento: 12 },
+      noviembre: { tmin: 18, tmax: 27, lluvia: 25, diasLluvia: 3, viento: 13 },
+      diciembre: { tmin: 15, tmax: 24, lluvia: 22, diasLluvia: 3, viento: 14 },
+    };
+
+    const select = document.getElementById("monthSelect");
+    const tableContainer = document.getElementById("monthlyTable");
+    const chartCtx = document.getElementById("monthChart").getContext("2d");
+    let monthChart;
+
+    function updateMonthSection(month) {
+      const data = climaPorMes[month];
+      tableContainer.innerHTML = `
+        <table style="width:100%; background-color:#ffffff; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1); padding:15px;">
+          <tr><td><strong>Temp. mínima promedio:</strong></td><td>${data.tmin} °C</td></tr>
+          <tr><td><strong>Temp. máxima promedio:</strong></td><td>${data.tmax} °C</td></tr>
+          <tr><td><strong>Días de lluvia promedio:</strong></td><td>${data.diasLluvia} días</td></tr>
+          <tr><td><strong>Precipitación promedio:</strong></td><td>${data.lluvia} mm</td></tr>
+          <tr><td><strong>Viento promedio:</strong></td><td>${data.viento} km/h</td></tr>
+        </table>
+      `;
+
+      if (monthChart) monthChart.destroy();
+
+      monthChart = new Chart(chartCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Temp. mín', 'Temp. máx', 'Lluvia', 'Días lluvia', 'Viento'],
+          datasets: [{
+            label: `Clima en ${month.charAt(0).toUpperCase() + month.slice(1)}`,
+            data: [data.tmin, data.tmax, data.lluvia, data.diasLluvia, data.viento],
+            backgroundColor: ['#4fc3f7', '#0288d1', '#81d4fa', '#29b6f6', '#03a9f4']
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    select.addEventListener('change', (e) => {
+      updateMonthSection(e.target.value);
+    });
+
+    updateMonthSection("enero");
 
     loadWeather();
   </script>
