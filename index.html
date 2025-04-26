@@ -106,7 +106,6 @@
       <iframe src="https://embed.windy.com/embed2.html?lat=23.737&lon=-99.154&zoom=7&level=surface&overlay=radar&menu=true&message=true&marker=true&calendar=now&pressure=true&type=map&location=coordinates&detail=true&detailLat=23.737&detailLon=-99.154&metricWind=default&metricTemp=default&radarRange=-1" allowfullscreen></iframe>
     </section>
 
-    <!-- Nueva sección: Clima por meses -->
     <section class="chart-section">
       <h2>¿Qué tiempo suele hacer en Ciudad Victoria por meses?</h2>
       <label for="monthSelect"><strong>Selecciona un mes:</strong></label>
@@ -138,7 +137,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const API_KEY = '40023f22ed2bd6b0fc5cc231f0c022ed';  // Asegúrate de que la clave sea válida
+    const API_KEY = 'fe7acc2b0ab267129d8f7426daf66a4d'; // Tu nueva clave de API
     let city = 'Ciudad Victoria';
 
     document.getElementById('searchButton').addEventListener('click', () => {
@@ -152,17 +151,7 @@
     async function loadWeather() {
       try {
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&lang=es&appid=${API_KEY}`);
-        
-        // Comprobar si la respuesta es exitosa (status 200)
-        if (!res.ok) {
-          throw new Error(`No se pudo obtener los datos del clima para ${city}. Verifica el nombre de la ciudad.`);
-        }
-
         const data = await res.json();
-        if (data.cod !== 200) {
-          throw new Error(`No se pudo obtener los datos del clima para ${city}. Error: ${data.message}`);
-        }
-
         displayWeather(data);
 
         const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&lang=es&appid=${API_KEY}`);
@@ -170,9 +159,8 @@
         displayForecast(forecastData);
         displayHourly(forecastData);
         plotGraph(forecastData);
-
       } catch (error) {
-        document.getElementById('weather').innerHTML = `<p>Error al obtener datos: ${error.message}</p>`;
+        document.getElementById('weather').innerHTML = '<p>Error al obtener datos. Revisa el nombre de la ciudad.</p>';
         console.error(error);
       }
     }
@@ -270,10 +258,4 @@
       julio: { tmin: 25, tmax: 35, lluvia: 60, diasLluvia: 6, viento: 15 },
       agosto: { tmin: 25, tmax: 35, lluvia: 55, diasLluvia: 5, viento: 14 },
       septiembre: { tmin: 24, tmax: 33, lluvia: 60, diasLluvia: 6, viento: 13 },
-      octubre: { tmin: 22, tmax: 30, lluvia: 40, diasLluvia: 4, viento: 12 },
-      noviembre: { tmin: 18, tmax: 27, lluvia: 25, diasLluvia: 3, viento: 13 },
-      diciembre: { tmin: 15, tmax: 24, lluvia: 22, diasLluvia: 3, viento: 14 },
-    };
-
-    const select = document.getElementById("monthSelect");
-    const
+      octubre: { tmin: 22, tmax
